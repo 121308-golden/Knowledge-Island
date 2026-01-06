@@ -341,7 +341,7 @@ function App() {
                         className={`
                         flex flex-col z-30
                         bg-white border-l border-gray-200/60
-                        rounded-[2.5rem] overflow-hidden shrink-0
+                        rounded-[15px] overflow-hidden shrink-0
                         transition-[width,transform,opacity,margin,box-shadow] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
                         ${isRightSidebarOpen 
                             ? 'w-[28rem] opacity-100 translate-x-0 shadow-[0_-4px_24px_-2px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.02)]' 
@@ -357,6 +357,9 @@ function App() {
                                 onClose={() => setIsRightSidebarOpen(false)}
                                 onNavigateToFile={(id) => setSelectedFileId(id)}
                                 isOpen={isRightSidebarOpen}
+                                onSummary={handleAISummary}
+                                onMindMap={handleAIMindMap}
+                                onPodcast={handleAIPodcast}
                             />
                         </div>
                     </aside>

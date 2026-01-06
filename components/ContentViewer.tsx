@@ -460,10 +460,6 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ file }) => {
         return (
           // Modified: Seamless white background, removed card styling
           <div className="max-w-4xl mx-auto p-10 md:p-14 min-h-full relative">
-            <div className="flex justify-between items-start mb-2">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">正在阅读: {removeExtension(file.name)}</div>
-            </div>
-            
             {/* Inject TTS Player here for text files */}
             {file.content && <TTSPlayer text={file.content} />}
             

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, FileNode } from '../types';
-import { Send, Mic, Volume2, Loader2, X, Link as LinkIcon, Bot } from 'lucide-react';
+import { Send, Mic, Volume2, Loader2, X, Link as LinkIcon, Bot, File, Search, FileText, Network, Radio, AtSign, Folder } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { createBlob, decode, decodeAudioData } from '../services/liveApiUtils';
 
@@ -10,6 +10,9 @@ interface AIChatProps {
   onClose: () => void;
   onNavigateToFile: (fileId: string) => void;
   isOpen: boolean;
+  onSummary?: () => void;
+  onMindMap?: () => void;
+  onPodcast?: () => void;
 }
 
 // --------------------------------------------------------
@@ -173,7 +176,7 @@ const useLiveSession = (
 // COMPONENT
 // --------------------------------------------------------
 
-const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onNavigateToFile, isOpen }) => {
+const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onNavigateToFile, isOpen, onSummary, onMindMap, onPodcast }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { 
       id: '1', 
@@ -197,8 +200,17 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileNode[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 当 currentFile 变化时，更新选中的文件列表
+  useEffect(() => {
+    if (currentFile && !selectedFiles.find(f => f.id === currentFile.id)) {
+      setSelectedFiles([currentFile]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFile?.id]);
 
   // Monitor visibility to stop voice mode
   useEffect(() => {
@@ -224,7 +236,15 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
     let context = `你是一位创作者知识库的智能助手。请使用中文回答。 \n`;
     context += `重要指令：提供完整、自然的回答。当你的回答引用知识库中的特定文件时，请在相关句子或短语末尾添加引用，格式为双括号包裹确切的文件名，例如：[[宣言.md]]。\n\n`;
     
-    if (currentFile) {
+    if (selectedFiles.length > 0) {
+      context += `用户正在基于以下文件进行对话：\n`;
+      selectedFiles.forEach((file) => {
+        context += `- "${file.name}" (类型: ${file.type})\n`;
+        if (file.content && file.type === 'text') {
+          context += `  文件内容:\n${file.content}\n\n`;
+        }
+      });
+    } else if (currentFile) {
       context += `用户当前正在查看文件： "${currentFile.name}" (类型: ${currentFile.type}).\n`;
       if (currentFile.content && currentFile.type === 'text') {
         context += `文件内容:\n${currentFile.content}\n\n`;
@@ -362,14 +382,13 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
   return (
     <div className="flex flex-col h-full relative bg-transparent">
       {/* Header - Enhanced Design */}
-      <div className="px-6 py-5 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-100/60 z-20 shrink-0 sticky top-0 shadow-sm">
+      <div className="px-6 py-2 flex items-center justify-between bg-white/80 backdrop-blur-xl border-b border-gray-100/60 z-20 shrink-0 sticky top-0 shadow-sm">
         <div className="flex items-center gap-3">
            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isVoiceMode ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-blue-500 shadow-md'}`}>
               <Bot size={14} className="text-white" />
            </div>
            <div className="flex flex-col">
-              <h3 className="font-extrabold text-gray-800 text-sm tracking-tight leading-none">AI 伴侣</h3>
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">在线</span>
+              <h3 className="font-extrabold text-gray-800 text-sm tracking-tight leading-none">AI 学习助手</h3>
            </div>
         </div>
         <button 
@@ -487,8 +506,55 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
       </div>
 
       {/* Input Area - Enhanced Design */}
-      <div className="p-6 bg-white/90 backdrop-blur-xl border-t border-gray-100/60 shrink-0 z-20 shadow-[0_-2px_12px_-2px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center gap-2 bg-gray-50/80 rounded-full pl-5 pr-2 py-2.5 border border-gray-200/60 shadow-sm focus-within:bg-white focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-500/15 transition-all duration-300 group ring-1 ring-transparent focus-within:ring-blue-200/50">
+      <div className="p-6 shrink-0 z-20">
+        {/* Top Action Buttons */}
+        <div className="flex items-center gap-2 mb-3">
+          <button 
+            onClick={onSummary}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-violet-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors"
+          >
+            <FileText size={14} />
+            <span>总结</span>
+          </button>
+          <button 
+            onClick={onMindMap}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
+          >
+            <Network size={14} />
+            <span>思维导图</span>
+          </button>
+          {onPodcast && (
+            <button 
+              onClick={onPodcast}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+            >
+              <Radio size={14} />
+              <span>播客</span>
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col gap-2 bg-gray-50/80 rounded-[20px] pl-5 pr-2 pt-3 pb-3 border border-gray-200/60 shadow-sm focus-within:bg-white focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-500/15 transition-all duration-300 group ring-1 ring-transparent focus-within:ring-blue-200/50">
+          {/* Selected Files Cards */}
+          {selectedFiles.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-gray-200/60">
+              {selectedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-medium text-blue-700 group hover:bg-blue-100 transition-colors"
+                >
+                  <File size={12} className="text-blue-600" />
+                  <span>{removeExtension(file.name)}</span>
+                  <button
+                    onClick={() => setSelectedFiles(selectedFiles.filter(f => f.id !== file.id))}
+                    className="ml-1 text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="移除"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <input
             type="text"
             className="flex-1 bg-transparent border-none focus:outline-none text-sm text-gray-800 placeholder-gray-500 font-medium h-9"
@@ -498,17 +564,33 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
             disabled={isVoiceMode}
           />
-          <button 
-            onClick={inputValue.trim() ? handleSendMessage : () => setIsVoiceMode(true)}
-            disabled={isLoading || (isVoiceMode && !!inputValue.trim())}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
-              inputValue.trim()
-                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 active:scale-95' 
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {inputValue.trim() ? <Send size={16} className="ml-0.5" /> : <Mic size={18} />}
-          </button>
+          {/* Bottom Action Buttons */}
+          <div className="flex items-center gap-2 pl-0.5">
+            <button 
+              className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="@文件"
+            >
+              <AtSign size={16} />
+            </button>
+            <button 
+              className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              title="网络搜索"
+            >
+              <Search size={16} />
+            </button>
+            <button 
+              onClick={inputValue.trim() ? handleSendMessage : () => setIsVoiceMode(true)}
+              disabled={isLoading || (isVoiceMode && !!inputValue.trim())}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                inputValue.trim()
+                  ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 active:scale-95' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+              title={inputValue.trim() ? "发送" : "语音输入"}
+            >
+              {inputValue.trim() ? <Send size={16} /> : <Mic size={16} />}
+            </button>
+          </div>
         </div>
       </div>
     </div>

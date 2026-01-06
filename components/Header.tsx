@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user, onUserClick }) => {
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 z-20 relative select-none">
+    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between pl-0 pr-6 shrink-0 z-20 relative select-none">
       
       {/* Left Side: Product Branding */}
       <div className="flex items-center flex-1 min-w-0">
@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ user, onUserClick }) => {
           <img 
             src="/logo.png" 
             alt="知识岛" 
-            className="h-16 w-auto object-contain"
+            className="h-24 w-auto object-contain"
           />
       </div>
 
