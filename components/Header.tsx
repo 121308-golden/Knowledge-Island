@@ -24,22 +24,19 @@ const Header: React.FC<HeaderProps> = ({ user, onUserClick }) => {
       </div>
 
       {/* Right Side: User Profile */}
-      <div className="flex-1 flex items-center justify-end gap-2 shrink-0">
+      <div className="flex-1 flex items-center justify-end gap-0.5 shrink-0">
          {user && onUserClick && (
             <>
                 {/* Membership Info Button */}
-                <button className="flex flex-col items-end gap-0.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors group border border-transparent hover:border-gray-100">
+                <button className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors group border border-transparent hover:border-gray-100">
                      <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded-full uppercase tracking-wide leading-none mb-0.5 group-hover:bg-gray-800 transition-colors shadow-sm">{user.membershipTier}</span>
-                     <div className="flex items-center gap-1">
-                         <span className="text-xs font-black text-gray-900">{user.credits}</span>
-                         <span className="text-[9px] font-bold text-gray-400">CR</span>
-                    </div>
+                     <span className="text-xs font-black text-gray-900">{user.credits}</span>
                 </button>
 
                 {/* Avatar Button */}
                 <button 
                     onClick={onUserClick}
-                    className="ml-1 p-0.5 rounded-full hover:ring-2 hover:ring-gray-100 transition-all active:scale-95"
+                    className="p-0.5 rounded-full hover:ring-2 hover:ring-gray-100 transition-all active:scale-95"
                     title="个人资料"
                 >
                     <img 

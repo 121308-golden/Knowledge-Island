@@ -204,7 +204,7 @@ function App() {
                     
                     {/* Floating Sidebar Toggle (When closed) */}
                     {readerView === 'dashboard' && !isLeftSidebarOpen && (
-                        <div className="absolute top-4 left-4 z-50 animate-in fade-in zoom-in duration-300">
+                        <div className={`absolute top-4 z-50 animate-in fade-in zoom-in duration-300 ${isRightSidebarOpen ? '-left-8' : '-left-4'}`}>
                              <button 
                                 onClick={() => setIsLeftSidebarOpen(true)}
                                 className="p-3 bg-white border border-gray-200 shadow-sm rounded-2xl text-gray-500 hover:text-blue-600 hover:scale-105 active:scale-95 transition-all"
@@ -224,10 +224,10 @@ function App() {
                         >
                             {/* Main Content Area */}
                             <div className="flex-1 h-full bg-white transition-all duration-500 relative">
-                                <ContentViewer file={selectedFile} />
+                                <ContentViewer file={selectedFile} isLeftSidebarOpen={isLeftSidebarOpen} isRightSidebarOpen={isRightSidebarOpen} />
                                 
                                 {/* TOC - 相对于内容区域定位 */}
-                                {headings.length > 0 && !isLeftSidebarOpen && (
+                                {headings.length > 0 && !isLeftSidebarOpen && !isRightSidebarOpen && (
                                     <div className="absolute -left-4 top-0 h-full flex flex-col items-center justify-center z-20 pointer-events-none animate-fadeIn">
                                         <div 
                                             className="relative pointer-events-auto"

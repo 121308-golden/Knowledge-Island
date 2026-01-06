@@ -6,6 +6,8 @@ import { decode, decodeAudioData } from '../services/liveApiUtils';
 
 interface ContentViewerProps {
   file: FileNode | null;
+  isLeftSidebarOpen?: boolean;
+  isRightSidebarOpen?: boolean;
 }
 
 // --- TTS Player Component (iOS 18 Style) ---
@@ -210,7 +212,7 @@ const TTSPlayer = ({ text }: { text: string }) => {
 
   return (
     // iOS 18 Style Card: Slightly darkened background for visibility on white, backdrop blur, rounded
-    <div className="bg-gray-100/80 backdrop-blur-xl border border-white/50 shadow-sm rounded-2xl p-5 mb-10 select-none transition-all hover:bg-gray-100 hover:shadow-md">
+    <div className="bg-gray-100/80 backdrop-blur-xl border border-white/50 shadow-lg rounded-[2rem] p-5 mb-10 select-none transition-all hover:bg-gray-100 hover:shadow-xl">
         <div className="flex items-center gap-5">
             {/* Play Button */}
             <button 
@@ -219,8 +221,8 @@ const TTSPlayer = ({ text }: { text: string }) => {
                 className={`
                     w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 active:scale-95
                     ${isPlaying 
-                        ? 'bg-blue-600 text-white ring-2 ring-blue-200' 
-                        : 'bg-gray-900 text-white hover:bg-black hover:shadow-lg'
+                        ? 'bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white ring-2 ring-sky-200' 
+                        : 'bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white hover:from-sky-500 hover:via-blue-500 hover:to-blue-700 hover:shadow-lg'
                     }
                 `}
             >
@@ -231,13 +233,13 @@ const TTSPlayer = ({ text }: { text: string }) => {
             <div className="flex-1 flex flex-col gap-2 min-w-0">
                 {/* Time Pill floating like the screenshot */}
                 <div className="flex items-center gap-3">
-                   <div className="bg-gray-900 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                   <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
                       {formatTime(currentTime)}
                    </div>
                    {/* Progress Track */}
                    <div className="flex-1 h-1.5 bg-gray-300/50 rounded-full relative overflow-hidden">
                       <div 
-                          className="absolute top-0 left-0 h-full bg-blue-600 rounded-full transition-all duration-100 ease-linear"
+                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 rounded-full transition-all duration-100 ease-linear"
                           style={{ width: `${progress}%` }}
                       />
                    </div>
@@ -361,7 +363,109 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
     )
 }
 
-const ContentViewer: React.FC<ContentViewerProps> = ({ file }) => {
+// Video Player Component with Subtitles
+const VideoPlayer: React.FC<{ file: FileNode; isLeftSidebarOpen: boolean; isRightSidebarOpen: boolean; removeExtension: (name: string) => string }> = ({ file, isLeftSidebarOpen, isRightSidebarOpen, removeExtension }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  
+  // Mock subtitles data - in real app, this would come from file.subtitles or similar
+  const subtitles = [
+    { time: 0, text: "Hello, and welcome. I'm Olivia from OpenAI's education team." },
+    { time: 10, text: "Teachers are early and active adopters of Chat GPT, with three out of five teachers already using AI." },
+    { time: 20, text: "Chat GPT saves teachers time on administrative tasks, helps them create personalized materials, and fosters collaboration among colleagues." },
+    { time: 35, text: "That's why we built this course, to help you move from curiosity to confident, practical use in your own classroom." },
+    { time: 50, text: "The course consists of seven modules, offering a focused tour of Chat GPT's key tools for teachers, along with practical tips for getting better and more relevant answers." },
+    { time: 70, text: "Quick videos, tool demos, and hands-on practice chats you can try immediately." },
+    { time: 85, text: "The course will feature real teachers, sharing the examples and workflows they use every day." }
+  ];
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateTime = () => setCurrentTime(video.currentTime);
+    video.addEventListener('timeupdate', updateTime);
+    
+    return () => {
+      video.removeEventListener('timeupdate', updateTime);
+    };
+  }, []);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getCurrentSubtitle = () => {
+    for (let i = subtitles.length - 1; i >= 0; i--) {
+      if (currentTime >= subtitles[i].time) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  const currentSubtitleIndex = getCurrentSubtitle();
+
+  // Adjust width and padding based on sidebar states - unified left/right spacing
+  const sidePadding = isRightSidebarOpen ? 'px-1 md:px-2' : (isLeftSidebarOpen ? 'pl-4 md:pl-6 pr-4 md:pr-6' : 'px-10 md:px-14');
+  const maxWidth = isRightSidebarOpen ? 'max-w-[calc(100%-20px)]' : 'max-w-[calc(100%-60px)]';
+  const leftMargin = isLeftSidebarOpen ? 'ml-0' : 'mx-auto';
+  
+  return (
+    <div className={`${leftMargin} ${maxWidth} ${sidePadding} py-4 md:py-6 min-h-full relative`}>
+      <div className="flex flex-col h-full">
+        <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-sm mb-6">
+          <video 
+            ref={videoRef}
+            controls 
+            className="w-full h-full" 
+            src={file.content}
+          >
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        
+        {/* Subtitles Section */}
+        <div 
+          className="flex-1 overflow-y-auto max-h-[calc(100vh-500px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        >
+          <div className="space-y-0.5">
+            {subtitles.map((subtitle, index) => {
+              const isActive = index === currentSubtitleIndex;
+              return (
+                <div
+                  key={index}
+                  className={`flex gap-6 items-start transition-all duration-200 py-2 px-1 ${
+                    isActive ? 'bg-gradient-to-r from-blue-50/80 to-transparent rounded-lg' : ''
+                  }`}
+                >
+                  <span className={`text-xs font-bold shrink-0 w-14 text-right mt-0.5 tracking-tight ${
+                    isActive ? 'text-blue-600' : 'text-gray-400'
+                  }`}>
+                    {formatTime(subtitle.time)}
+                  </span>
+                  <p className={`text-sm leading-relaxed flex-1 ${
+                    isActive ? 'text-gray-900 font-medium' : 'text-gray-600'
+                  }`}>
+                    {subtitle.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <p className="mt-4 text-gray-500 font-bold flex items-center gap-2 px-4 py-2">
+          <Film size={16} className="text-blue-600" /> {removeExtension(file.name)}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const ContentViewer: React.FC<ContentViewerProps> = ({ file, isLeftSidebarOpen = true, isRightSidebarOpen = false }) => {
   // 移除文件扩展名
   const removeExtension = (fileName: string): string => {
     const lastDotIndex = fileName.lastIndexOf('.');
@@ -471,32 +575,23 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ file }) => {
         );
       case 'image':
         return (
-          <div className="flex flex-col items-center justify-center min-h-full p-8 relative">
-            <div className="p-3 rounded-[1rem] bg-white">
-                <img 
-                    src={file.content} 
-                    alt={file.name} 
-                    className="max-h-[75vh] max-w-full rounded-lg object-contain shadow-sm" 
-                />
+          <div className={`${isLeftSidebarOpen ? 'ml-0 pl-4 md:pl-6' : 'mx-auto'} max-w-[calc(100%-120px)] ${isLeftSidebarOpen ? 'pr-4 md:pr-6' : 'p-10 md:p-14'} py-4 md:py-6 min-h-full relative`}>
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="w-full">
+                  <img 
+                      src={file.content} 
+                      alt={file.name} 
+                      className="max-h-[90vh] w-full rounded-lg object-contain shadow-sm" 
+                  />
+              </div>
+              <p className="mt-4 text-sm text-gray-500 font-bold flex items-center gap-2 px-4 py-2">
+                  <ImageIcon size={16} className="text-blue-600" /> {removeExtension(file.name)}
+              </p>
             </div>
-            <p className="mt-6 text-sm text-gray-500 font-bold flex items-center gap-2 px-4 py-2">
-                <ImageIcon size={16} className="text-blue-600" /> {removeExtension(file.name)}
-            </p>
           </div>
         );
       case 'video':
-        return (
-          <div className="flex flex-col items-center justify-center min-h-full p-8 relative">
-             <div className="w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-sm">
-                <video controls className="w-full h-full" src={file.content}>
-                    Your browser does not support the video tag.
-                </video>
-             </div>
-             <p className="mt-8 text-gray-500 font-bold flex items-center gap-2 px-4 py-2">
-                <Film size={16} className="text-blue-600" /> {removeExtension(file.name)}
-             </p>
-          </div>
-        );
+        return <VideoPlayer file={file} isLeftSidebarOpen={isLeftSidebarOpen} isRightSidebarOpen={isRightSidebarOpen || false} removeExtension={removeExtension} />;
       case 'audio':
         return (
           <div className="flex flex-col items-center justify-center min-h-full relative p-8">

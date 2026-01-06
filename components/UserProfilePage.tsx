@@ -145,10 +145,10 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user, items, onBack, 
                     <div 
                         key={item.id}
                         onClick={() => onSelectKnowledge(item.id)}
-                        className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 cursor-pointer flex flex-col h-[320px] overflow-hidden hover:-translate-y-1"
+                        className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 cursor-pointer flex flex-col h-[260px] overflow-hidden hover:-translate-y-1"
                     >
                         {/* Cover Image */}
-                        <div className="h-44 bg-gray-100 relative overflow-hidden shrink-0">
+                        <div className="h-36 bg-gray-100 relative overflow-hidden shrink-0">
                              <img src={item.coverImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                              
                              {/* Floating Badges */}
@@ -165,7 +165,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user, items, onBack, 
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 flex-1 flex flex-col justify-between">
+                        <div className="p-4 flex-1 flex flex-col justify-between">
                             <div>
                                 <h3 className="font-extrabold text-gray-900 text-xl leading-tight mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{item.title}</h3>
                                 <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user, items, onBack, 
                 ))}
                 
                 {/* Explore Card / Add New */}
-                 <button className="border-3 border-dashed border-gray-200 hover:border-blue-300 rounded-[2.5rem] flex flex-col items-center justify-center p-8 gap-5 text-gray-400 hover:bg-blue-50/30 transition-all group h-[320px] active:scale-[0.98]">
+                 <button className="border-3 border-dashed border-gray-200 hover:border-blue-300 rounded-[2.5rem] flex flex-col items-center justify-center p-8 gap-5 text-gray-400 hover:bg-blue-50/30 transition-all group h-[260px] active:scale-[0.98]">
                      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 group-hover:bg-blue-100 group-hover:text-blue-600 shadow-sm">
                          <Compass size={32} />
                      </div>
