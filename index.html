@@ -27,6 +27,48 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
       }
+      .ProseMirror {
+        outline: none;
+        white-space: pre-wrap;
+      }
+      .ProseMirror p {
+        margin: 0 0 0.9rem 0;
+      }
+      .ProseMirror h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 1.2rem 0 0.6rem;
+      }
+      .ProseMirror h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 1rem 0 0.5rem;
+      }
+      .ProseMirror h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0.8rem 0 0.4rem;
+      }
+      .ProseMirror ul {
+        padding-left: 1.5rem;
+        list-style: disc;
+        margin: 0.5rem 0 0.9rem;
+      }
+      .ProseMirror li {
+        margin: 0.25rem 0;
+      }
+      .ProseMirror img {
+        max-width: 100%;
+        border-radius: 16px;
+        margin: 1rem 0;
+      }
+      .ProseMirror p.is-editor-empty:first-child::before {
+        content: attr(data-placeholder);
+        float: left;
+        color: #94a3b8;
+        pointer-events: none;
+        height: 0;
+      }
     </style>
   <script type="importmap">
 {

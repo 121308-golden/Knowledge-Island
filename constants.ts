@@ -19,14 +19,16 @@ export const MOCK_PROJECTS: Project[] = [
     id: 'proj_1',
     title: '数字文艺复兴',
     description: '现代创作者经济与数字所有权的宣言。',
+    coverImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
     lastModified: '2小时前',
     status: 'published',
-    stats: { views: 12500, sales: 850 }
+    stats: { views: 1920, sales: 13470 }
   },
   {
     id: 'proj_2',
     title: 'React 设计模式进阶',
     description: '构建可扩展 React 应用的高级模式与最佳实践。',
+    coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
     lastModified: '1天前',
     status: 'draft',
     stats: { views: 0, sales: 0 }
@@ -35,9 +37,10 @@ export const MOCK_PROJECTS: Project[] = [
     id: 'proj_3',
     title: '极简主义生活',
     description: '清理数字与物理生活的终极指南。',
+    coverImage: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
     lastModified: '5天前',
     status: 'published',
-    stats: { views: 5400, sales: 320 }
+    stats: { views: 1280, sales: 8980 }
   }
 ];
 
