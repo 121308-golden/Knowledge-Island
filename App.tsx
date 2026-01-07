@@ -108,6 +108,8 @@ function App() {
   const handleAISummary = () => alert("AI 摘要生成中... (演示)");
   const handleAIMindMap = () => alert("正在生成思维导图... (演示)");
   const handleAIPodcast = () => alert("正在生成播客... (演示)");
+  const handleAIPPT = () => alert("正在生成 AI PPT... (演示)");
+  const handleAIQuiz = () => alert("正在生成 AI 测验... (演示)");
 
   return (
     <div className="flex flex-col h-screen text-gray-800 bg-white">
@@ -304,6 +306,8 @@ function App() {
                                             onSummary={handleAISummary}
                                             onMindMap={handleAIMindMap}
                                             onPodcast={handleAIPodcast}
+                                            onPPT={handleAIPPT}
+                                            onQuiz={handleAIQuiz}
                                         />
                                     </div>
                                 )}
@@ -360,6 +364,8 @@ function App() {
                                 onSummary={handleAISummary}
                                 onMindMap={handleAIMindMap}
                                 onPodcast={handleAIPodcast}
+                                onPPT={handleAIPPT}
+                                onQuiz={handleAIQuiz}
                             />
                         </div>
                     </aside>

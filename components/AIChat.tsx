@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, FileNode } from '../types';
-import { Send, Mic, Volume2, Loader2, X, Link as LinkIcon, Bot, File, Search, FileText, Network, Radio, AtSign, Folder } from 'lucide-react';
+import { Send, Mic, Volume2, Loader2, X, Link as LinkIcon, Bot, File, Search, FileText, Network, Radio, AtSign, Folder, Presentation, ClipboardCheck } from 'lucide-react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { createBlob, decode, decodeAudioData } from '../services/liveApiUtils';
 
@@ -13,6 +13,8 @@ interface AIChatProps {
   onSummary?: () => void;
   onMindMap?: () => void;
   onPodcast?: () => void;
+  onPPT?: () => void;
+  onQuiz?: () => void;
 }
 
 // --------------------------------------------------------
@@ -176,7 +178,7 @@ const useLiveSession = (
 // COMPONENT
 // --------------------------------------------------------
 
-const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onNavigateToFile, isOpen, onSummary, onMindMap, onPodcast }) => {
+const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onNavigateToFile, isOpen, onSummary, onMindMap, onPodcast, onPPT, onQuiz }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { 
       id: '1', 
@@ -511,25 +513,43 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
         <div className="flex items-center gap-2 mb-3">
           <button 
             onClick={onSummary}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-violet-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors"
+            title="总结"
+            className="w-8 h-8 flex items-center justify-center text-violet-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors"
           >
-            <FileText size={14} />
-            <span>总结</span>
+            <FileText size={16} />
           </button>
           <button 
             onClick={onMindMap}
-            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
+            title="思维导图"
+            className="w-8 h-8 flex items-center justify-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
           >
-            <Network size={14} />
-            <span>思维导图</span>
+            <Network size={16} />
           </button>
           {onPodcast && (
             <button 
               onClick={onPodcast}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+              title="播客"
+              className="w-8 h-8 flex items-center justify-center text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
             >
-              <Radio size={14} />
-              <span>播客</span>
+              <Radio size={16} />
+            </button>
+          )}
+          {onPPT && (
+            <button 
+              onClick={onPPT}
+              title="AI PPT"
+              className="w-8 h-8 flex items-center justify-center text-pink-600 hover:text-pink-700 hover:bg-pink-50 rounded-lg transition-colors"
+            >
+              <Presentation size={16} />
+            </button>
+          )}
+          {onQuiz && (
+            <button 
+              onClick={onQuiz}
+              title="AI 测验"
+              className="w-8 h-8 flex items-center justify-center text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 rounded-lg transition-colors"
+            >
+              <ClipboardCheck size={16} />
             </button>
           )}
         </div>
@@ -567,30 +587,38 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
             disabled={isVoiceMode}
           />
           {/* Bottom Action Buttons */}
-          <div className="flex items-center gap-2 pl-0.5">
+          <div className="flex items-center justify-between pl-0.5">
+            <div className="flex items-center gap-2">
+              <button 
+                className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="@文件"
+              >
+                <AtSign size={16} />
+              </button>
+              <button 
+                className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="网络搜索"
+              >
+                <Search size={16} />
+              </button>
+              {inputValue.trim() && (
+                <button 
+                  onClick={handleSendMessage}
+                  disabled={isLoading}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 bg-sky-400 text-white shadow-lg shadow-sky-400/30 hover:bg-sky-500 active:scale-95"
+                  title="发送"
+                >
+                  <Send size={16} />
+                </button>
+              )}
+            </div>
             <button 
-              className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              title="@文件"
-            >
-              <AtSign size={16} />
-            </button>
-            <button 
-              className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              title="网络搜索"
-            >
-              <Search size={16} />
-            </button>
-            <button 
-              onClick={inputValue.trim() ? handleSendMessage : () => setIsVoiceMode(true)}
+              onClick={() => setIsVoiceMode(true)}
               disabled={isLoading || (isVoiceMode && !!inputValue.trim())}
-              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
-                inputValue.trim()
-                  ? 'bg-sky-400 text-white shadow-lg shadow-sky-400/30 hover:bg-sky-500 active:scale-95' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-              title={inputValue.trim() ? "发送" : "语音输入"}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              title="语音输入"
             >
-              {inputValue.trim() ? <Send size={16} /> : <Mic size={16} />}
+              <Mic size={16} />
             </button>
           </div>
         </div>
