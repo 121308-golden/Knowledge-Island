@@ -62,12 +62,13 @@ const FileTree: React.FC<FileTreeProps> = ({ files, selectedFileId, onSelect, on
               }
             }}
           >
-            {node.type === 'folder' && (
+            {node.type === 'folder' ? (
               <span className="text-gray-400">
                 {node.isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               </span>
+            ) : (
+              <span className="w-3.5" /> // Spacer for non-folders
             )}
-            {!node.type && <span className="w-3.5" />} {/* Spacer for non-folders */}
             
             <span className="shrink-0">{getIcon(node)}</span>
             <span className="truncate">{node.type === 'folder' ? node.name : removeExtension(node.name)}</span>

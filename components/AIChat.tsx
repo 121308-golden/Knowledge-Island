@@ -194,6 +194,7 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
   const [isThinking, setIsThinking] = useState(false);
   const [typingText, setTypingText] = useState('');
   const [currentTypingMessageId, setCurrentTypingMessageId] = useState<string | null>(null);
+  const [hoveredCitationIndex, setHoveredCitationIndex] = useState<number | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingIntervalRef = useRef<number | null>(null);
@@ -228,7 +229,7 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
   // Generate context string
   const getContext = () => {
     let context = `你是一位创作者知识库的智能助手。请使用中文回答。 \n`;
-    context += `重要指令：提供完整、自然的回答。当你的回答引用知识库中的特定文件时，请在相关句子或短语末尾添加引用，格式为双括号包裹确切的文件名，例如：[[宣言.md]]。\n\n`;
+    context += `重要指令：提供完整、自然的回答。当你的回答引用知识库中的特定内容时，请在相关句子或短语末尾添加引用，格式为双括号包裹文件名和引用的文本片段，例如：[[第1章 考研英语全景解析.md:英一的文章多选自学术期刊，词汇更难、句子更复杂，要求5500+词汇量]]。\n\n`;
     
     if (selectedFiles.length > 0) {
       context += `用户正在基于以下文件进行对话：\n`;
@@ -256,40 +257,82 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
   };
 
   // Parse text to render citations
-  const renderMessageText = (text: string) => {
-    // Regex to match [[FileName]]
+  const renderMessageText = (text: string, messageId: string) => {
+    // Regex to match [[FileName:CitationText]] or [[FileName]]
     const parts = text.split(/(\[\[.*?\]\])/g);
     let citationIndex = 0;
     
     return parts.map((part, index) => {
       if (part.startsWith('[[') && part.endsWith(']]')) {
-        const fileName = part.slice(2, -2);
+        const content = part.slice(2, -2);
+        // 检查是否包含冒号（新格式：文件名:引用文本）
+        const colonIndex = content.indexOf(':');
+        let fileName: string;
+        let citationText: string | null = null;
+        
+        if (colonIndex > 0) {
+          fileName = content.substring(0, colonIndex);
+          citationText = content.substring(colonIndex + 1);
+        } else {
+          fileName = content;
+        }
+        
         const fileNode = findFileByName(fileTreeData, fileName);
         citationIndex++;
         const currentCitationIndex = citationIndex;
+        const uniqueKey = `${messageId}-citation-${currentCitationIndex}`;
         const displayName = removeExtension(fileName);
+        const isHovered = hoveredCitationIndex === currentCitationIndex;
         
         if (fileNode) {
           return (
-            <span key={index} className="inline-flex items-center align-baseline relative group mx-0.5">
+            <span key={index} className="inline-flex items-center align-baseline relative mx-0.5">
               {/* 引用符号 - 默认显示 */}
               <button 
+                onMouseEnter={() => setHoveredCitationIndex(currentCitationIndex)}
+                onMouseLeave={() => setHoveredCitationIndex(null)}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onNavigateToFile(fileNode.id);
+                  console.log('引用按钮被点击:', { 
+                    fileId: fileNode.id, 
+                    fileName: fileNode.name,
+                    citationText: citationText,
+                    hasCitationText: !!citationText
+                  });
+                  
+                  // 如果有关联的引用文本，触发跳转和高亮事件
+                  if (citationText) {
+                    // 触发自定义事件，传递文件ID和引用文本
+                    // App.tsx 会处理文件切换和高亮
+                    const event = new CustomEvent('navigateToCitation', {
+                      detail: { fileId: fileNode.id, citationText: citationText.trim() }
+                    });
+                    console.log('触发 navigateToCitation 事件:', event.detail);
+                    window.dispatchEvent(event);
+                  } else {
+                    // 如果没有引用文本，只切换文件
+                    onNavigateToFile(fileNode.id);
+                  }
                 }}
-                className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-50 hover:bg-sky-100 text-sky-600 hover:text-sky-700 transition-all text-[11px] font-bold cursor-pointer hover:scale-110 active:scale-95 border border-sky-200/60 hover:border-sky-300 shadow-sm hover:shadow-md"
-                title={displayName}
+                className="citation-button inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-50 hover:bg-sky-100 text-sky-600 hover:text-sky-700 transition-all text-[11px] font-bold cursor-pointer hover:scale-110 active:scale-95 border border-sky-200/60 hover:border-sky-300 shadow-sm hover:shadow-md"
+                title={citationText ? `${displayName}: ${citationText.substring(0, 30)}${citationText.length > 30 ? '...' : ''}` : displayName}
               >
                 {currentCitationIndex}
               </button>
               
-              {/* 悬停时显示的文件名提示 */}
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1.5 bg-gray-900/95 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50 backdrop-blur-sm shadow-xl transform translate-y-1 group-hover:translate-y-0">
-                {displayName}
-                <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-gray-900/95"></div>
-              </div>
+              {/* 悬停时显示的文件名和引用文本提示 - 只有当前悬停的引用才显示 */}
+              {isHovered && (
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1.5 bg-gray-900/95 text-white text-xs font-medium rounded-lg max-w-xs pointer-events-none z-50 backdrop-blur-sm shadow-xl animate-in fade-in zoom-in-95 duration-200">
+                  <div className="font-bold">{displayName}</div>
+                  {citationText && (
+                    <div className="mt-1 text-gray-300 text-[11px] line-clamp-2">
+                      {citationText}
+                    </div>
+                  )}
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-gray-900/95"></div>
+                </div>
+              )}
             </span>
           );
         }
@@ -322,19 +365,19 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
     const fixedAnswer = `首先，不要只看学校名气或专业名称，而要根据你自己的实际情况来判断。
 
 第一，看你的英语基础。
-如果你四级刚过、六级没考过，或者背单词很吃力，读长文章经常看不懂逻辑，那说明你的词汇量和语感还不足以应对英一。因为第一章明确提到，英一的文章多选自学术期刊，词汇更难、句子更复杂，要求5500+词汇量；而英二内容更贴近生活、商业、教育，词汇要求约4500，整体更友好。这种情况下，选英二是更明智的选择。
+如果你四级刚过、六级没考过，或者背单词很吃力，读长文章经常看不懂逻辑，那说明你的词汇量和语感还不足以应对英一。因为第一章明确提到，英一的文章多选自学术期刊，词汇更难、句子更复杂，要求5500+词汇量[[第1章 考研英语全景解析.md:英语（一）：难度更高，词汇量要求约5500+，文章多选自学术期刊、科技文献]]；而英二内容更贴近生活、商业、教育，词汇要求约4500，整体更友好[[第1章 考研英语全景解析.md:英语（二）：难度相对较低，词汇量约4500+，文章更贴近生活、商业、教育]]。这种情况下，选英二是更明智的选择。
 
 第二，看你的时间和目标分数。
-如果你每天能投入英语的时间少于1.5小时，或者总分目标在65–70分之间，那英二更适合你。因为英二没有翻译题，省下20分钟可以留给作文；作文是图表类，结构固定，容易套模板拿分；新题型也基本是送分题。而英一光是翻译和图画作文就更耗精力。第一章强调"作文必须留足50分钟"，在时间紧张的情况下，英二的整体节奏更容易掌控。
+如果你每天能投入英语的时间少于1.5小时，或者总分目标在65–70分之间，那英二更适合你。因为英二没有翻译题，省下20分钟可以留给作文；作文是图表类，结构固定，容易套模板拿分；新题型也基本是送分题。而英一光是翻译和图画作文就更耗精力。第一章强调"作文必须留足50分钟，不可压缩"[[第1章 考研英语全景解析.md:作文必须留足50分钟，不可压缩]]，在时间紧张的情况下，英二的整体节奏更容易掌控。
 
 第三，别被"英二变难了"吓到，但要理解"难在哪"。
-第一章说英二近年向英一靠拢，但本质上还是考"理解语篇"，不是考偏难怪。它的难点更多在细节匹配和数据理解，而不是深层逻辑推断。如果你擅长抓段落主旨、找关键词，但不太会"脑补作者没说的意思"，那你其实更适合英二。
+第一章说英二近年向英一靠拢，但本质上还是考"理解语篇"，不是考偏难怪[[第1章 考研英语全景解析.md:考研英语不是"背单词"的考试，而是"理解语篇"的考试]]。它的难点更多在细节匹配和数据理解，而不是深层逻辑推断。如果你擅长抓段落主旨、找关键词，但不太会"脑补作者没说的意思"，那你其实更适合英二。
 
 第四，做一次真实测试，别凭感觉。
 今天就找一篇2023年英一阅读和一篇英二阅读，同样限时15分钟做完。如果英二正确率明显更高、读起来更顺畅，那就说明你的能力现阶段更匹配英二。上岸的关键不是挑战高难度，而是最大化你的得分效率。
 
 最后记住：考研是总分游戏。
-用英二稳稳拿70分，比硬啃英一只拿55分更有价值。选择让你英语不拖后腿的考试类型，才能把精力留给专业课和政治——这才是第一章想传达的核心策略：合理分配精力，优先攻克提分性价比高的部分。`;
+用英二稳稳拿70分，比硬啃英一只拿55分更有价值。选择让你英语不拖后腿的考试类型，才能把精力留给专业课和政治——这才是第一章想传达的核心策略：合理分配时间和精力，优先攻克提分性价比高的部分[[第1章 考研英语全景解析.md:合理分配时间和精力，是取得高分的关键]]。`;
 
     // 思考阶段：等待2.5秒
     await new Promise(resolve => setTimeout(resolve, 2500));
@@ -497,12 +540,12 @@ const AIChat: React.FC<AIChatProps> = ({ currentFile, fileTreeData, onClose, onN
                     <div className="flex-1 min-w-0 pt-0.5">
                       {currentTypingMessageId === msg.id && typingText ? (
                         <div className="text-[15px] leading-7 text-gray-800 whitespace-pre-wrap">
-                          {renderMessageText(typingText)}
+                          {renderMessageText(typingText, msg.id)}
                           <span className="inline-block w-2 h-5 bg-blue-600 ml-1 animate-pulse"></span>
                         </div>
                       ) : (
                         <div className="text-[15px] leading-7 text-gray-800 whitespace-pre-wrap">
-                          {renderMessageText(msg.text)}
+                          {renderMessageText(msg.text, msg.id)}
                         </div>
                       )}
                     </div>

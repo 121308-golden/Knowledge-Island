@@ -50,6 +50,29 @@ function App() {
   const [creatorFiles, setCreatorFiles] = useState<FileNode[]>(MOCK_FILES); // Creator personal files
   const [selectedFileId, setSelectedFileId] = useState<string | null>(() => findFirstFileId(MOCK_FILES));
 
+  // Debug: Log all video files on mount
+  useEffect(() => {
+    const findVideoFiles = (nodes: FileNode[]): FileNode[] => {
+      const videos: FileNode[] = [];
+      for (const node of nodes) {
+        if (node.type === 'video') {
+          videos.push(node);
+          console.log('找到视频文件:', node.name, '路径:', node.content);
+        }
+        if (node.children) {
+          videos.push(...findVideoFiles(node.children));
+        }
+      }
+      return videos;
+    };
+    const videoFiles = findVideoFiles(MOCK_FILES);
+    if (videoFiles.length === 0) {
+      console.warn('警告: 在 MOCK_FILES 中没有找到任何视频文件！');
+    } else {
+      console.log(`找到 ${videoFiles.length} 个视频文件:`, videoFiles.map(f => f.name));
+    }
+  }, []);
+
   // Helper to find file by ID (recursive)
   const findFile = (nodes: FileNode[], id: string): FileNode | null => {
     for (const node of nodes) {
@@ -107,6 +130,33 @@ function App() {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
+
+  // 处理引用跳转：跳转到文件并高亮指定文本
+  useEffect(() => {
+    const handleNavigateToCitation = (event: CustomEvent<{ fileId: string; citationText: string }>) => {
+      const { fileId, citationText } = event.detail;
+      console.log('接收到 navigateToCitation 事件:', { fileId, citationText });
+      
+      // 确保文件ID已设置
+      setSelectedFileId(fileId);
+      
+      // 等待文件切换后，滚动并高亮文本
+      // 增加延迟确保 DOM 更新完成
+      setTimeout(() => {
+        console.log('触发 highlightText 事件:', citationText);
+        const highlightEvent = new CustomEvent('highlightText', {
+          detail: { text: citationText }
+        });
+        window.dispatchEvent(highlightEvent);
+      }, 600); // 增加延迟到600ms，确保文件内容已渲染
+    };
+
+    window.addEventListener('navigateToCitation', handleNavigateToCitation as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigateToCitation', handleNavigateToCitation as EventListener);
+    };
+  }, []);
 
   // Placeholder actions
   const handleAISummary = () => {
